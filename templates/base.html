@@ -1,0 +1,88 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}WheelSet|Web {% endblock %}
+
+{% block head %}
+  {{ super() }}
+  {#<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">#}
+  <link rel="stylesheet" href="/static/styles.css">
+{% endblock %}
+
+{% block navbar %}
+  <div class="navbar navbar-default navbar-inverse" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="{{ url_for('.index') }}">WheelSet | Web</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="{{ url_for('.index') }}">首页</a></li>
+          <li><a href="{{ url_for('.go_data') }}" target="_blank">数据监测</a></li>
+          <li><a href="{{ url_for('.go_report') }}">报表处理</a></li>
+          {% if session['is_admin'] %}
+            <li><a href="{{ url_for('.go_user') }}">用户管理</a></li>
+          {% endif %}
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          {% if current_user.is_authenticated %}
+            <li>
+              <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                 aria-expanded="false">
+                {{ current_user.username }}<strong class="caret"></strong>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href="{{ url_for('change_password') }}">更改密码</a></li>
+                <li><a href='{{ url_for("logout") }}'>注销</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="{{ url_for('.logout') }}">注销 <span class="glyphicon glyphicon-off"></span></a>
+            </li>
+          {% else %}
+            <li>
+              <a href="{{ url_for('.login') }}">登录</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    {% for message in get_flashed_messages() %}
+      <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+      </div>
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+  </div>
+
+
+  <div class="footer row">
+    <div class="col-md-2"></div>
+    <div class="col-md-6">
+      <p>© 2017 <b>
+        <span>成都安科泰丰科技有限公司</span>
+      </b> · <a href="#terms">隐私权和条款</a> · <a href="#">公司主页</a></p>
+    </div>
+
+    <div class="col-md-4"></div>
+  </div>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+
+{% endblock %}

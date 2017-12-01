@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+{% block page_content %}
+  <script type="text/javascript" src="{{ url_for('static', filename='js/echarts.common.min.js') }}"></script>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-5 ">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <td colspan="5" style="text-align: center;vertical-align: middle;">当前轮对参数指标(均值)</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>横向力</td>
+            <td>垂向力</td>
+            <td>减载率</td>
+            <td>脱轨系数</td>
+          </tr>
+          </thead>
+          <tbody id='currentData'>
+          {% for i in range(4) %}
+            <tr>
+              <td>轮对{{ loop.index }}</td>
+              <td>0.00</td>
+              <td>0.00</td>
+              <td>0.00</td>
+              <td>0.00</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+
+      </div>
+
+      <div class="col-md-7 " style="padding: 20px;">
+
+        <div class="input-group" style="width:300px;">
+          <span class="input-group-addon">包号区间：</span>
+          <input type="text" class="form-control" style="display: inline-block;" id="sample-inp" placeholder="默认30000">
+        </div>
+        <br>
+        <div class="input-group" style="width:300px;">
+          <span class="input-group-addon">移动速度：</span>
+          <input type="text" class="form-control" style="display: inline-block;" id="speed-inp" placeholder="默认3000">
+        </div>
+
+        <br>
+        <a href="#" class="btn btn-primary" onclick="startApp()">开始</a>
+        <a href="#" class="btn btn-primary" onclick="interuptApp()">暂停</a>
+        <a href="#" class="btn btn-primary" onclick="continueApp()">继续</a>
+        <a href="#" class="btn btn-primary" onclick="stopApp()">结束</a>
+      </div>
+
+
+      {#      <div class="col-md-6 ">#}
+      {#        当前轮对参数指标#}
+      {#        <div class="data-area" style="background: lightcyan;float: none;width: 380px;height: 25px;padding:1px; ">#}
+      {#          当前轮对参数指标:#}
+      {#        </div>#}
+      {#        <div></div>#}
+      {#        <div class="data-area" style="background: lightcyan; width: 60px; height: 120px; ">#}
+      {#          <br/><span> 轮对1</span><span> 轮对2</span><span> 轮对3</span><span> 轮对4</span>#}
+      {#        </div>#}
+      {#        <div class="data-area" style="background: pink;">#}
+      {#          横向力#}
+      {#        </div>#}
+      {#        <div class="data-area" style="background: yellow">#}
+      {#          垂向力#}
+      {#        </div>#}
+      {#        <div class="data-area" style="background:lightblue ">#}
+      {#          减载率#}
+      {#        </div>#}
+      {#        <div class="data-area" style="background: lightgreen">#}
+      {#          脱轨系数#}
+      {#        </div>#}
+      {#        {% for i in range(16) %}#}
+      {#          <div class="data-area" style="background: white;">#}
+      {#            <span> 0.00 </span>#}
+      {#          </div>#}
+      {#        {% endfor %}#}
+      {#      </div>#}
+    </div>
+    <hr/>
+    <div class="row">
+      <div id="content1" style="background-color:#EEEEEE;height:400px;width:900px;">
+      </div>
+      <div id="content2" style="background-color:#EE2EEE;height:400px;width:900px;">
+        内容在这里2
+      </div>
+    </div>
+
+    <div class="row">
+      <div id="content3" style="background-color:#1E21EE;height:400px;width:900px;">
+        内容在这里3
+      </div>
+      <div id="content4" style="background-color:#EE2E2E;height:400px;width:900px;">
+        内容在这里4
+      </div>
+    </div>
+
+  </div>
+
+
+  <script type="text/javascript">
+
+      chartTimers = []; //定时器
+      contentDivID = ['content1', 'content2', 'content3', 'content4'];
+      chartObjs = [];
+
+      //每个轮对数据y轴
+      Cdata1 = [[]];
+      Cdata2 = [[]];
+      Cdata3 = [[]];
+      Cdata4 = [[]];
+      //x轴
+      dx1 = [];
+      dx2 = [];
+      dx3 = [];
+      dx4 = [];
+
+      function initChart(divContentId, id) {
+          var colors = ['#5793f3', '#d14a61', '#675bba', '#555555'];
+
+          var myChart = echarts.init(document.getElementById(divContentId));
+          chart_title = '轮轨' + id + '实时数据';
+          // 显示标题，空的坐标轴
+          myChart.setOption({
+              color: colors,
+              title: {
+                  text: chart_title,
+                  x: 'center',
+              },
+              legend: {
+                  data: ['横向力', '垂向力', '减载率', '脱轨系数'],
+                  orient:'vertical',
+                  right: 0,
+                  top:100
+              },
+              tooltip: {
+                  trigger: 'axis',
+                  axisPointer: {
+                      type: 'cross'
+                  }
+              },
+              toolbox: {
+                  show: true,
+                  feature: {
+                      mark: {show: true},
+                      dataZoom: {show: true},
+                      dataView: {show: true, readOnly: false},
+                      restore: {show: true},
+                      saveAsImage: {show: true}
+                  }
+              },
+              xAxis: {
+                  type: 'category',
+                  splitLine: 'none',
+                  data: [1, 2, 3, 4, 5]
+              },
+              yAxis: {
+                  type: 'value'
+
+              },
+              series: [{
+                  type: 'line',
+                  showSymbol: false,
+                  hoverAnimation: false,
+                  data: [11, 2, 33, 11, 23]
+              }]
+          });
+          chartObjs.push({id: id, chart: myChart});
+      }
+
+
+      function setChartData(chartObj, Cdata, dxx) {
+          var device_id = chartObj.id;
+          var myChart = chartObj.chart;
+          var sample_num = $("#sample-inp").val();
+          myChart.showLoading();
+          $.ajax({
+              type: "get",
+              async: true,            //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+              url: "/data/get_data?device_id=" + device_id + "&sample_num=" + sample_num + "&speed_num=0",
+              data: {},
+              dataType: "json",        //返回数据形式为json
+              success: function (result) {
+                  //请求成功时执行该函数内容，result即为服务器返回的json对象
+                  if (result) {
+                      var d0 = [], d1 = [], d2 = [], d3 = [];
+                      for (var i = 0; i < result.length; i++) {
+                          dxx.push(result[i].package);
+                          d0.push(result[i].data1);
+                          d1.push(result[i].data2);
+                          d2.push(result[i].data3);
+                          d3.push(result[i].data4);
+                      }
+
+                      Cdata[0] = d0;
+                      Cdata[1] = d1;
+                      Cdata[2] = d2;
+                      Cdata[3] = d3;
+
+                      myChart.hideLoading();
+                      myChart.setOption({
+                          grid: [
+                              {x: '8%', y: '10%', height: '20%'},
+                              {x: '8%', y: '32%', height: '18%'},
+                              {x: '8%', y: '52%', height: '18%'},
+                              {x: '8%', y: '72%', height: '18%'}
+                          ],
+                          xAxis: [{
+                              type: 'category',
+                              boundaryGap: false,
+                              gridIndex: 0,
+                              show: false,
+                              data: dxx
+                          }, {
+                              type: 'category',
+                              boundaryGap: false,
+                              gridIndex: 1,
+                              show: false,
+                              data: dxx
+                          }, {
+                              type: 'category',
+                              boundaryGap: false,
+                              gridIndex: 2,
+                              show: false,
+                              data: dxx
+                          }, {
+                              type: 'category',
+                              boundaryGap: false,
+                              gridIndex: 3,
+                              data: dxx
+                          }],
+                          yAxis: [
+                              {
+                                  type: 'value',
+                                  gridIndex: 0,
+                                  scale:true
+                              },
+                              {
+                                  type: 'value',
+                                  gridIndex: 1,
+                                  scale:true
+                              },
+                              {
+                                  type: 'value',
+                                  gridIndex: 2,
+                                  scale:true
+                              },
+                              {
+                                  type: 'value',
+                                  gridIndex: 3,
+                                  scale:true
+                              }
+                          ],
+                          series: [{
+                              name: '横向力',
+                              showSymbol: false,
+                              type: 'line',
+                              xAxisIndex: 0,
+                              yAxisIndex: 0,
+                              lineStyle: {
+                                  normal: {
+                                      width: 0.5
+                                  }
+                              },
+                              data: Cdata[0]
+                          }, {
+                              name: '垂向力',
+                              showSymbol: false,
+                              type: 'line',
+                              xAxisIndex: 1,
+                              yAxisIndex: 1,
+                              lineStyle: {
+                                  normal: {
+                                      width: 0.5
+                                  }
+                              },
+                              data: Cdata[1]
+                          }, {
+                              name: '减载率',
+                              showSymbol: false,
+                              type: 'line',
+                              xAxisIndex: 2,
+                              yAxisIndex: 2,
+                              lineStyle: {
+                                  normal: {
+                                      width: 0.5
+                                  }
+                              },
+                              data: Cdata[2]
+                          }, {
+                              name: '脱轨系数',
+                              showSymbol: false,
+                              type: 'line',
+                              xAxisIndex: 3,
+                              yAxisIndex: 3,
+                              lineStyle: {
+                                  normal: {
+                                      width: 0.5
+                                  }
+                              },
+                              data: Cdata[3]
+                          }]
+                      });
+                  }
+
+              },
+              error: function (errorMsg) {
+                  //请求失败时执行该函数
+                  alert("图表请求数据失败!");
+                  myChart.hideLoading();
+              }
+          });
+      }
+
+      function setChartInterval(chartObj, Cdata, dxx) {
+          var device_id = chartObj.id;
+          var myChart = chartObj.chart;
+          var sample_num = $("#sample-inp").val();
+          var speed_num = $("#speed-inp").val();
+          var timer = setInterval(function () {
+              $.ajax({
+                  type: "get",
+                  async: true,            //异步请求（同步请求将会锁住浏览器，用户其他操作必须等待请求完成才可以执行）
+                  url: "/data/get_data?device_id=" + device_id + "&sample_num=" + sample_num + "&speed_num=" + speed_num,
+                  data: {},
+                  dataType: "json",        //返回数据形式为json
+                  success: function (result) {
+                      //请求成功时执行该函数内容，result即为服务器返回的json对象
+                      if (result) {
+                          //去除头元素
+                          dxx.splice(0, result.length);
+                          Cdata[0].splice(0, result.length);
+                          Cdata[1].splice(0, result.length);
+                          Cdata[2].splice(0, result.length);
+                          Cdata[3].splice(0, result.length);
+
+                          for (var i = 0; i < result.length; i++) {
+                              dxx.push(result[i].package);
+                              Cdata[0].push(result[i].data1);
+                              Cdata[1].push(result[i].data2);
+                              Cdata[2].push(result[i].data3);
+                              Cdata[3].push(result[i].data4);
+                          }
+
+                          myChart.setOption({
+                              xAxis: [{
+                                  type: 'category',
+                                  boundaryGap: false,
+                                  gridIndex: 0,
+                                  show: false,
+                                  data: dxx
+                              }, {
+                                  type: 'category',
+                                  boundaryGap: false,
+                                  gridIndex: 1,
+                                  show: false,
+                                  data: dxx
+                              }, {
+                                  type: 'category',
+                                  boundaryGap: false,
+                                  gridIndex: 2,
+                                  show: false,
+                                  data: dxx
+                              }, {
+                                  type: 'category',
+                                  boundaryGap: false,
+                                  gridIndex: 3,
+                                  data: dxx
+                              }],
+                              series: [{
+                                  name: '横向力',
+                                  showSymbol: false,
+                                  type: 'line',
+                                  xAxisIndex: 0,
+                                  yAxisIndex: 0,
+                                  lineStyle: {
+                                      normal: {
+                                          width: 0.5
+                                      }
+                                  },
+                                  data: Cdata[0]
+                              }, {
+                                  name: '垂向力',
+                                  showSymbol: false,
+                                  type: 'line',
+                                  xAxisIndex: 1,
+                                  yAxisIndex: 1,
+                                  lineStyle: {
+                                      normal: {
+                                          width: 0.5
+                                      }
+                                  },
+                                  data: Cdata[1]
+                              }, {
+                                  name: '减载率',
+                                  showSymbol: false,
+                                  type: 'line',
+                                  xAxisIndex: 2,
+                                  yAxisIndex: 2,
+                                  lineStyle: {
+                                      normal: {
+                                          width: 0.5
+                                      }
+                                  },
+                                  data: Cdata[2]
+                              }, {
+                                  name: '脱轨系数',
+                                  showSymbol: false,
+                                  type: 'line',
+                                  xAxisIndex: 3,
+                                  yAxisIndex: 3,
+                                  lineStyle: {
+                                      normal: {
+                                          width: 0.5
+                                      }
+                                  },
+                                  data: Cdata[3]
+                              }]
+                          });
+                      }
+                  },
+                  error: function (errorMsg) {
+                      //请求失败时执行该函数
+                      //alert("图表请求数据失败!");
+                      //myChart.hideLoading();
+                  }
+              });
+
+          }, 1000);
+          chartTimers.push(timer);
+
+      }
+
+      window.onload = function () {
+          $("#sample-inp").val({{ sample_num }});
+          $("#speed-inp").val({{ speed_num }});
+
+          for (var i = 0; i < 4; i++) {
+              initChart(contentDivID[i], i + 1);
+          }
+      };
+
+      function clearChartInterval() {
+          for (var i = 0; i < chartTimers.length; i++) {
+              window.clearInterval(chartTimers[i]);
+          }
+      }
+
+      function startApp() {
+          clearChartInterval();
+          dx1 = [];
+          dx2 = [];
+          dx3 = [];
+          dx4 = [];
+
+          //通知下端系统开始插入数据到数据库中
+          $.ajax({
+              url: "/data/start_data",
+              success: function (result, status) {
+                  if (status == 'success' && result == 'ok') {
+                      //设置数据
+                      setChartData(chartObjs[0], Cdata1, dx1);
+                      setChartData(chartObjs[1], Cdata2, dx2);
+                      setChartData(chartObjs[2], Cdata3, dx3);
+                      setChartData(chartObjs[3], Cdata4, dx4);
+                      //设置定时器，数据开始移动
+                      setChartInterval(chartObjs[0], Cdata1, dx1);
+                      setChartInterval(chartObjs[1], Cdata2, dx2);
+                      setChartInterval(chartObjs[2], Cdata3, dx3);
+                      setChartInterval(chartObjs[3], Cdata4, dx4);
+                  }
+              }
+          });
+
+          //设置特征值数据
+          setInterval(function () {
+              $.ajax({
+                  url: '/data/get_meanCharaValue',
+                  dataType: "json",
+                  success: function (result, status) {
+                      if (status == 'success') {
+                          if (result == 'none') {
+                              return;
+                          }
+                          else {
+                              var tableStr = "";
+                              for (var i = 0; i < result.length; i++) {
+                                  tableStr = tableStr +
+                                      "<tr>" +
+                                      "<td>轮对" + result[i].device_id + "</td>" +
+                                      "<td>" + result[i].data1_meanValue + "</td>" +
+                                      "<td>" + result[i].data2_meanValue + "</td>" +
+                                      "<td>" + result[i].data3_meanValue + "</td>" +
+                                      "<td>" + result[i].data4_meanValue + "</td>" +
+                                      " </tr> "
+                              }
+                              $('#currentData').html(tableStr);
+                          }
+                      }
+                  }
+              });
+          }, 1000)
+
+
+      }
+
+      function interuptApp() {
+          clearChartInterval();
+      }
+
+      function continueApp() {
+          clearChartInterval();
+          setChartInterval(chartObjs[0], Cdata1, dx1);
+          setChartInterval(chartObjs[1], Cdata2, dx2);
+          setChartInterval(chartObjs[2], Cdata3, dx3);
+          setChartInterval(chartObjs[3], Cdata4, dx4);
+      }
+
+
+      function stopApp() {
+          clearChartInterval();
+
+          //通知下端系统开始插入数据到数据库中
+          $.get("/data/stop_data", function (data, status) {
+              window.location.reload();
+              {#              if (status == 'success' && data == 'ok') {#}
+              {#                  for (var i = 0; i < 1; i++) {#}
+              {#                      chartObjs[i].chart.setOption({#}
+              {#                          series: [{#}
+              {#                              data: []#}
+              {#                          }, {#}
+              {#                              data: []#}
+              {#                          }, {#}
+              {#                              data: []#}
+              {#                          }, {#}
+              {#                              data: []#}
+              {#                          }]#}
+              {#                      });#}
+              {#                  }#}
+              {#              }#}
+          });
+
+
+      }
+
+  </script>
+
+  <script type="text/javascript">
+      window.onunload = function (e) {
+          $.ajax({
+              url: "/data/stop_data",
+              async: false
+          });
+          return "closing.";
+
+          //e = e || window.event;
+          //var y = e.clientY;
+          //if (y <= 0 || y >= Math.max(document.body ? document.body.clientHeight : 0, document.documentElement ? document.documentElement.clientHeight : 0)) {
+          //IE 和 Firefox
+          //alert("IE or Firefox");
+          //e.returnValue = "确定要刷新或关闭浏览器窗口？";
+          //}
+          //谷歌
+          //console.log("beforeclosing");
+          //return "确定要刷新或关闭浏览器窗口？";
+      }
+  </script>
+
+{% endblock %}

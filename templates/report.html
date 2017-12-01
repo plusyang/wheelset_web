@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block page_content %}
+  <div class="row">
+    <div class="col-md-12">
+      {#      请输入公里区间：#}
+      {#      <input class="form-control inner-input" type="text" name="startMeter"> 到#}
+      {#      <input class="form-control inner-input" type="text" name="endMeter">#}
+      {#      <a class="btn btn-primary" href="/data/search_report?startMeter=1&endMeter=2">查询</a>#}
+      请选择导出文件类型：
+      <select id="export-select">
+        <option selected="selected" value="1"> EXCEL 2000</option>
+        <option value="2">EXCEL 2007</option>
+        <option value="3">CSV</option>
+        <option value="4">PDF</option>
+      </select>
+      <a class="btn btn-primary" id="export-btn">导出报表</a>
+    </div>
+
+  </div>
+  <br/>
+  <table class="table table-bordered" id="report1">
+    <thead>
+    <tr>
+      <td rowspan="2" style="text-align: center;vertical-align: middle;">轮对</td>
+      <td colspan="2">横向力</td>
+      <td colspan="2">垂向力</td>
+      <td colspan="2">减载力</td>
+      <td colspan="2">脱轨系数</td>
+    </tr>
+    <tr>
+      <td>均值</td>
+      <td>最大值</td>
+      <td>均值</td>
+      <td>最大值</td>
+      <td>均值</td>
+      <td>最大值</td>
+      <td>均值</td>
+      <td>最大值</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for o in objs %}
+      <tr>
+        <td>轮对{{ o.device_id }}</td>
+        <td>{{ o.data1_meanValue }}</td>
+        <td>{{ o.data1_maxValue }}</td>
+        <td>{{ o.data2_meanValue }}</td>
+        <td>{{ o.data2_maxValue }}</td>
+        <td>{{ o.data3_meanValue }}</td>
+        <td>{{ o.data3_maxValue }}</td>
+        <td>{{ o.data4_meanValue }}</td>
+        <td>{{ o.data4_maxValue }}</td>
+      </tr>
+    {% endfor %}
+
+    </tbody>
+  </table>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {#  <script type="text/javascript" src="/static/bootstrap-daterangepicker/daterangepicker.js"></script>#}
+  <script type="text/javascript" src="/static/js/libs/FileSaver/FileSaver.min.js"></script>
+  <script type="text/javascript" src="/static/js/libs/js-xlsx/xlsx.core.min.js"></script>
+  <script type="text/javascript" src="/static/js/libs/jsPDF/jspdf.min.js"></script>
+  <script type="text/javascript" src="/static/js/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
+  <script type="text/javascript" src="/static/js/tableExport.min.js"></script>
+
+  <script type="text/javascript">
+      $(function () {
+          var export_obj = {type: 'excel'};
+          $("#export-select").change(function () {
+              var selectVal = $("#export-select").val();
+              if (selectVal == 1) {
+                  export_obj = {type: 'excel'};
+              } else if (selectVal == 2) {
+                  export_obj = {type: 'xlsx'};
+              } else if (selectVal == 3) {
+                  export_obj = {type: 'csv'};
+              } else if (selectVal == 4) {
+                  export_obj = {
+                      type: 'pdf',
+                      jspdf: {
+                          orientation: 'p',
+                          format: 'a4',
+                          margins: {left: 20, right: 10, top: 10, bottom: 10},
+                          autotable: false
+                      }
+                  };
+              }
+          });
+
+          $("#export-btn").click(function () {
+              $('#report1').tableExport(export_obj);
+          });
+      });
+
+
+
+
+  </script>
+
+
+
+{% endblock %}
