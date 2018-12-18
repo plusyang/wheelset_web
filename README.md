@@ -1,15 +1,14 @@
 ## 准备：
+  安装的MySql版本为5.7
+
 1. 安装virtualenv:
-`pip install virtualenv`
-
+  `pip install virtualenv`
 2. 创建虚拟环境:
-`virtualenv venv`
-
+  `virtualenv venv`
 3. 进入虚拟环境:
-`venv\Scripts\activate`
-
+  `venv\Scripts\activate`
 4. 安装依赖的包:
-`pip install -r requirements.txt`
+  `pip install -r requirements.txt`
 
 ## 运行：
 1. 初始化数据库：`python app.py db init`
@@ -31,3 +30,5 @@
 ## 浏览
 
 http://127.0.0.1:5000
+
+![image-20181219003518577](assets/image-20181219003518577-5150918.png)

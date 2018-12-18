@@ -22,7 +22,7 @@ import MySQLdb as mysql
 import mythread
 import udp_conn
 
-db2 = mysql.connect(user='root', passwd='', db='test03', charset='utf8')
+db2 = mysql.connect(user='root', passwd='root', db='test03', charset='utf8')
 db2.autocommit(True)
 c = db2.cursor()
 
@@ -37,7 +37,7 @@ def make_shell_context():
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/test03?charset=utf8'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test03?charset=utf8'
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['AdminPassword'] = '000000'
@@ -540,5 +540,5 @@ def init():
 
 
 if __name__ == '__main__':
-    # manager.run()
+    #manager.run()
     app.run()

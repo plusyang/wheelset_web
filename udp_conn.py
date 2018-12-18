@@ -1,7 +1,7 @@
 # encoding:utf-8
 import socket
 
-HOST = '192.168.1.134'
+HOST = '127.0.0.1'
 PORT = 11000
 BUFSIZ = 1024
 ADDR = (HOST, PORT)
